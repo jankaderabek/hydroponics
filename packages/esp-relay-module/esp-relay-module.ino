@@ -1,10 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
-#include <Arduino_JSON.h>
+#include <ArduinoJson.h>
 
 const char* ssid = "xxx";
-const char* password = "xx";
+const char* password = "xxx";
 
 String serverName = "http://192.168.1.10:3000/outputs";
 
@@ -34,6 +34,7 @@ void loop() {
     if(WiFi.status()== WL_CONNECTED){
       WiFiClient client;
       HTTPClient http;
+      DynamicJsonDocument doc(200);
 
       if (http.begin(client, serverName)) {
         Serial.print("[HTTP] GET...\n");
@@ -46,24 +47,18 @@ void loop() {
             String payload = http.getString();
             Serial.println(payload);
 
-            JSONVar myObject = JSON.parse(payload);
-  
-            if (JSON.typeof(myObject) == "undefined") {
-              Serial.println("Parsing input failed!");
+            DeserializationError error = deserializeJson(doc, payload);
+
+            if (error) {
+              Serial.print(F("deserializeJson() failed: "));
+              Serial.println(error.f_str());
               return;
             }
-          
-            Serial.print("JSON object = ");
-            Serial.println(myObject);
-          
-            JSONVar keys = myObject.keys();
-          
-            for (int i = 0; i < keys.length(); i++) {
-              JSONVar value = myObject[keys[i]];
-              Serial.print(keys[i]);
-              Serial.print(" = ");
-              Serial.println(value);
-            }
+
+            const bool isLightRelayActive = doc["outputs"]["light_relay"].as<bool>();
+
+            Serial.print("Is light relay active? ");
+            Serial.println(isLightRelayActive);
           }
         } else {
           Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
