@@ -3,8 +3,8 @@
 #include <WiFiClient.h>
 #include <Arduino_JSON.h>
 
-const char* ssid = "Vodafone-635A";
-const char* password = "Z4wGTz4njw5bkNpu";
+const char* ssid = "xxx";
+const char* password = "xx";
 
 String serverName = "http://192.168.1.10:3000/outputs";
 
