@@ -2,14 +2,18 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
+#include "esp-secrets.h"
 
-const char* ssid = "xxx";
-const char* password = "xxx";
+const char* ssid = SECRET_SSID;
+const char* password = SECRET_PASS;
 
 String serverName = "http://192.168.1.10:3000/outputs";
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
+
+unsigned long lastValidResponse = 0;
+unsigned long safetyDelay = 15000;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -35,6 +39,10 @@ void loop() {
     processRelayOutputs();
     
     lastTime = millis();
+  }
+
+  if ((millis() - lastValidResponse) > safetyDelay) {
+    digitalWrite(LED_BUILTIN, HIGH);
   }
 }
 
@@ -76,6 +84,8 @@ void processRelayOutputs () {
       Serial.println(error.f_str());
       return;
     }
+
+    lastValidResponse = millis();
 
     const bool isLightRelayActive = doc["outputs"]["light_relay"].as<bool>();
     Serial.print("Is light relay active? ");
