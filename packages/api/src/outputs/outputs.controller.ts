@@ -7,7 +7,7 @@ export class OutputsController {
   public getOutputsStatus () {
     return {
       outputs: {
-        light_relay: false
+        1: true
       }
     }
   }

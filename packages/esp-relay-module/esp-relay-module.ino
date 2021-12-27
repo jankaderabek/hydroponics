@@ -16,8 +16,13 @@ unsigned long lastValidResponse = 0;
 unsigned long safetyDelay = 15000;
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+
+  digitalWrite(D0, HIGH);
+  digitalWrite(D1, HIGH);
+  digitalWrite(D2, HIGH);
 
   Serial.begin(115200); 
 
@@ -42,7 +47,9 @@ void loop() {
   }
 
   if ((millis() - lastValidResponse) > safetyDelay) {
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(D0, HIGH);
+    digitalWrite(D1, HIGH);
+    digitalWrite(D2, HIGH);
   }
 }
 
@@ -87,15 +94,13 @@ void processRelayOutputs () {
 
     lastValidResponse = millis();
 
-    const bool isLightRelayActive = doc["outputs"]["light_relay"].as<bool>();
-    Serial.print("Is light relay active? ");
-    Serial.println(isLightRelayActive);
+    const bool firstOutputActive = doc["outputs"]["1"].as<bool>();
+    const bool secondOutputActive = doc["outputs"]["2"].as<bool>();
+    const bool thirdOutputActive = doc["outputs"]["3"].as<bool>();
 
-    if (isLightRelayActive) {
-      digitalWrite(LED_BUILTIN, LOW);
-    } else {
-      digitalWrite(LED_BUILTIN, HIGH);
-    }
+    digitalWrite(D0,  firstOutputActive ? LOW : HIGH);
+    digitalWrite(D1,  firstOutputActive ? LOW : HIGH);
+    digitalWrite(D2,  firstOutputActive ? LOW : HIGH);
   }
 
   http.end();
