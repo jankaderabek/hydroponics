@@ -10,8 +10,6 @@ export class OutputsController {
   readonly #mainLightOutput: Output
   readonly #seedsLightOutput: Output
 
-  readonly #waterPumpActiveDurationInMinutes: number = 15
-
   constructor() {
     this.#waterPumpOutput = createWaterPumpOutput()
     this.#mainLightOutput = createMainLightOutput()
