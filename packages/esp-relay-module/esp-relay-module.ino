@@ -7,33 +7,40 @@
 const char* ssid = SECRET_SSID;
 const char* password = SECRET_PASS;
 
-String serverName = "http://192.168.1.10:3000/outputs";
+const int waterPumpOutput = D0;
+const int mainLightOutput = D1;
+const int seedLightOutput = D2;
+
+const int RELAY_ENABLED = LOW;
+const int RELAY_DISABLED = HIGH;
+
+String serverName = "https://hydroponie-api.jankaderabek.eu/outputs";
 
 unsigned long lastTime = 0;
-unsigned long timerDelay = 5000;
+unsigned long timerDelay = 15000;
 
 unsigned long lastValidResponse = 0;
-unsigned long safetyDelay = 15000;
+unsigned long safetyDelay = 60000;
 
 void setup() {
-  pinMode(D0, OUTPUT);
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
+  pinMode(waterPumpOutput, OUTPUT);
+  pinMode(mainLightOutput, OUTPUT);
+  pinMode(seedLightOutput, OUTPUT);
 
-  digitalWrite(D0, HIGH);
-  digitalWrite(D1, HIGH);
-  digitalWrite(D2, HIGH);
+  digitalWrite(waterPumpOutput, RELAY_DISABLED);
+  digitalWrite(mainLightOutput, RELAY_DISABLED);
+  digitalWrite(seedLightOutput, RELAY_DISABLED);
 
-  Serial.begin(115200); 
+  Serial.begin(115200);
 
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
-  
+
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  
+
   Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
@@ -42,25 +49,27 @@ void setup() {
 void loop() {
   if ((millis() - lastTime) > timerDelay) {
     processRelayOutputs();
-    
+
     lastTime = millis();
   }
 
   if ((millis() - lastValidResponse) > safetyDelay) {
-    digitalWrite(D0, HIGH);
-    digitalWrite(D1, HIGH);
-    digitalWrite(D2, HIGH);
+    digitalWrite(waterPumpOutput, RELAY_DISABLED);
+    digitalWrite(mainLightOutput, RELAY_DISABLED);
+    digitalWrite(seedLightOutput, RELAY_DISABLED);
   }
 }
 
 void processRelayOutputs () {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi Disconnected");
-    
+
     return;
   }
 
-  WiFiClient client;
+  WiFiClientSecure client;
+  client.setInsecure(); //the magic line, use with caution
+  client.connect(serverName, 443);
   HTTPClient http;
   DynamicJsonDocument doc(200);
 
@@ -69,7 +78,7 @@ void processRelayOutputs () {
 
     return;
   }
-   
+
   Serial.print("[HTTP] GET...\n");
   int httpCode = http.GET();
 
@@ -78,8 +87,8 @@ void processRelayOutputs () {
     Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
 
     return;
-  } 
-   
+  }
+
   Serial.printf("[HTTP] GET... code: %d\n", httpCode);
 
   if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
@@ -94,13 +103,13 @@ void processRelayOutputs () {
 
     lastValidResponse = millis();
 
-    const bool firstOutputActive = doc["outputs"]["1"].as<bool>();
-    const bool secondOutputActive = doc["outputs"]["2"].as<bool>();
-    const bool thirdOutputActive = doc["outputs"]["3"].as<bool>();
+    const bool firstOutputActive = doc["outputs"]["waterPump"].as<bool>();
+    const bool secondOutputActive = doc["outputs"]["mainLight"].as<bool>();
+    const bool thirdOutputActive = doc["outputs"]["seedsLight"].as<bool>();
 
-    digitalWrite(D0,  firstOutputActive ? LOW : HIGH);
-    digitalWrite(D1,  firstOutputActive ? LOW : HIGH);
-    digitalWrite(D2,  firstOutputActive ? LOW : HIGH);
+    digitalWrite(waterPumpOutput, firstOutputActive ? RELAY_ENABLED : RELAY_DISABLED);
+    digitalWrite(mainLightOutput, firstOutputActive ? RELAY_ENABLED : RELAY_DISABLED);
+    digitalWrite(seedLightOutput, firstOutputActive ? RELAY_ENABLED : RELAY_DISABLED);
   }
 
   http.end();
