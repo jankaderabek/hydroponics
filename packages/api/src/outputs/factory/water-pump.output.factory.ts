@@ -1,7 +1,7 @@
 import { Output } from '~/outputs/output'
 import { ActiveInterval } from '~/outputs/active-interval'
 
-const waterPumpActiveDurationInMinutes = 45
+const waterPumpActiveDurationInMinutes = 15
 
 export const createWaterPumpOutput = (): Output => {
   const waterPumpActiveIntervals = []
