@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { OutputsController } from './outputs.controller';
+import { Module } from '@nestjs/common'
+import { OutputsController } from '~/outputs/outputs.controller'
 
 @Module({
-  controllers: [OutputsController]
+  controllers: [OutputsController],
 })
 export class OutputsModule {}
