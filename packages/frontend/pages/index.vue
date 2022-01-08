@@ -61,18 +61,18 @@ onMounted(() => {
 })
 
 const loadState = async () => {
-  const axiosResponse = await axios.get<OutputsState>('/outputs', { baseURL: serverAddress.value })
+  const axiosResponse = await axios.get<OutputsState>('/api/outputs', { params: { baseUrl: serverAddress.value } })
 
   outputsState.value = axiosResponse.data
 }
 
 const toggleOutput = async (output: keyof OutputsState) => {
   const axiosResponse = await axios.patch<OutputsState>(
-      '/outputs',
+      '/api/outputs-patch',
       {
         [output]: !outputsState.value[output]
       },
-      { baseURL: serverAddress.value }
+      { params: { baseUrl: serverAddress.value } }
   )
 
   outputsState.value = axiosResponse.data
