@@ -117,6 +117,11 @@ void setup() {
   webServer.addHandler(handler);
   
   webServer.onNotFound(notFound);
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Headers", "Content-Type");
+  DefaultHeaders::Instance().addHeader("Access-Control-Max-Age", "86400");
+
   webServer.begin();
 }
 
@@ -140,7 +145,11 @@ void loop() {
 }
 
 void notFound(AsyncWebServerRequest *request) {
-  request->send(404, "text/plain", "Not found");
+  if (request->method() == HTTP_OPTIONS) {
+    request->send(200);
+  } else {
+    request->send(404, "text/plain", "Not found");
+  }
 }
 
 void sendStatusResponse (AsyncWebServerRequest* request) {
@@ -206,6 +215,7 @@ bool shouldEnableWaterPump (int currentHours, int currentMinutes) {
 void updateThingSpeak () {
   ThingSpeak.setField(1, lightsEnabled);
   ThingSpeak.setField(2, waterPumpEnabled);
+  ThingSpeak.setField(3, seedsLightsEnabled);
 
   ThingSpeak.writeFields(thingSpeakChannelNumber, thingSpeakWriteAPIKey);
   Serial.println("Thingspeak updated");
